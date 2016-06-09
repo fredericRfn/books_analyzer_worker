@@ -1,4 +1,4 @@
-package books_analyzer_dao;
+package books_analyzer_worker;
 
 import java.util.ArrayList;
 import java.util.HashMap;

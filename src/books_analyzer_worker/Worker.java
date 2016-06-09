@@ -1,8 +1,6 @@
 package books_analyzer_worker;
 import com.rabbitmq.client.*;
 
-import books_analyzer_dao.Book;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -10,11 +8,16 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.util.HashMap;
+import java.util.concurrent.TimeoutException;
 
 public class Worker {
-  private static final String QUEUE_NAME = "jobs_queue";
+  private static final String JOBS_QUEUE = "jobs_queue";
+  private static final String LOGS_QUEUE = "logs";
+  private static final String ERROR_QUEUE = "errors";
+  private static String workerId;
 
   public static void main(String[] argv) throws Exception {
+	if (argv.length>0) { workerId = argv[0]; }
     ConnectionFactory factory = new ConnectionFactory();
 	factory.setHost("fox.rmq.cloudamqp.com");
 	factory.setUsername("xhffrluv");
@@ -23,8 +26,8 @@ public class Worker {
     final Connection connection = factory.newConnection();
     final Channel channel = connection.createChannel();
 
-    channel.queueDeclare(QUEUE_NAME, true, false, false, null);
-    System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
+    channel.queueDeclare(JOBS_QUEUE, true, false, false, null);
+    sendToQueue("Worker " + workerId + ":[*] Waiting for messages. To exit: kill -9 pid", LOGS_QUEUE);
 
     channel.basicQos(1); // 1 is a prefetch number: if the worker is already processing 1 message, give it to another one
 
@@ -32,16 +35,37 @@ public class Worker {
       @Override
       public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
         String message = new String(body, "UTF-8");
-        System.out.println(" [x] Received '" + message + "'");
+        sendToQueue("Worker " + workerId + "[x] Received '" + message + "'", LOGS_QUEUE);
         try {
-          process(message);
+        	process(message);
+        } catch (Exception e){
+        	sendToQueue("Worker " + workerId + ": failed to process the book " + message, ERROR_QUEUE);
         } finally {
-          System.out.println(" [x] Done");
-          channel.basicAck(envelope.getDeliveryTag(), false);
+        	sendToQueue("Worker " + workerId + " [x] Done", LOGS_QUEUE);
+            channel.basicAck(envelope.getDeliveryTag(), false);
         }
       }
     };
-    channel.basicConsume(QUEUE_NAME, false, consumer);
+    channel.basicConsume(JOBS_QUEUE, false, consumer);
+  }
+  
+  private static void sendToQueue(String message, String queue) {
+		ConnectionFactory factory = new ConnectionFactory();
+		factory.setHost("fox.rmq.cloudamqp.com");
+		factory.setUsername("xhffrluv");
+		factory.setPassword("zIU2WWJtvjsDUv_BrwCoU60RWcekbpvP");
+		factory.setVirtualHost("xhffrluv");
+		Connection connection;
+		try {
+			connection = factory.newConnection();
+			Channel channel = connection.createChannel();	 
+			channel.queueDeclare(queue, true, false, false, null);
+			channel.basicPublish("", queue, MessageProperties.PERSISTENT_TEXT_PLAIN, message.getBytes());
+			channel.close();
+			connection.close();
+		} catch (IOException | TimeoutException e) {
+			e.printStackTrace();
+		}
   }
   
   private static void process(String idBook) {
@@ -71,7 +95,6 @@ public class Worker {
   }
   
   private static String getTxtFromUrl(String urlString) {
-		System.out.println("Fetching content from:" + urlString);
 		StringBuilder sb = new StringBuilder();
 		URLConnection urlConn = null;
 		InputStreamReader in = null;
@@ -93,11 +116,12 @@ public class Worker {
 					bufferedReader.close();
 				}
 			}
-		in.close();
+			in.close();
 		} catch (Exception e) {
+			sendToQueue("Worker " + workerId + ": fail to get the book from the url " + urlString, LOGS_QUEUE);
 			throw new RuntimeException("A problem occured while calling URL:"+ urlString, e);
 		} 
-
+		sendToQueue("Worker " + workerId + ": successfully reached the url " + urlString, LOGS_QUEUE);
 		return sb.toString();
 	}
 }

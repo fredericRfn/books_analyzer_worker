@@ -1,9 +1,8 @@
-package books_analyzer_dao;
+package books_analyzer_worker;
 
 import java.util.ArrayList;
 
 public class Character {
-	private int id;
 	public final String name;
 	public ArrayList<String> sentences;
 	

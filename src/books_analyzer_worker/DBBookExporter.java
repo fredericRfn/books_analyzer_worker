@@ -6,9 +6,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import books_analyzer_dao.*;
-import books_analyzer_dao.Character;
-
 import com.mysql.jdbc.Connection;
 import com.mysql.jdbc.Driver;
 import com.mysql.jdbc.Statement;
@@ -103,7 +100,7 @@ public class DBBookExporter {
 		}
 	}
 	public void exportCharacterSentences(String idBook, Book book) {	
-		String valuesInSQL =""; String id; String sql;
+		String valuesInSQL =""; String sql;
 		ArrayList<CharacterSentence> characterSentences = book.getCharacterSentences(); 
 		for(CharacterSentence cs: characterSentences) {
 			System.out.println(cs.getSentence().getContent()); 

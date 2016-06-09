@@ -1,4 +1,4 @@
-package books_analyzer_dao;
+package books_analyzer_worker;
 
 public class Sentence {
 	public final String content;
