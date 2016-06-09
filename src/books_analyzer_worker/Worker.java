@@ -43,24 +43,31 @@ public class Worker {
     };
     channel.basicConsume(QUEUE_NAME, false, consumer);
   }
-
+  
   private static void process(String idBook) {
 	  // The message contains one id of a book in db.
-	  // STEP 1: Get metadata stored in DB (set flag = 1)
-	  HashMap<String,String> metadata = DBBookExporter.getMetadata(idBook);
-	  // STEP 2: Make the analysis of the book, instantiating the DAO objects
+	  DBBookExporter dbExporter = new DBBookExporter();
+	  HashMap<String,String> metadata = dbExporter.getMetadata(idBook);
+
 	  Book book = new Book(metadata.get("title"), metadata.get("author"), metadata.get("url"));
-	  book.generateSentences(getTxtFromUrl(metadata.get("url")));
-	  DBBookExporter.updateFlag(idBook, 1);
+	  dbExporter.updateFlag(idBook, 1);
+	  String content = getTxtFromUrl(metadata.get("url"));
+	  
+	  dbExporter.updateFlag(idBook, 2);
+	  book.generateSentences(content);
+	  dbExporter.exportSentences(idBook, book);
+	  
+	  dbExporter.updateFlag(idBook, 3);
 	  book.generateCharacters();
-	  DBBookExporter.updateFlag(idBook, 2);
-	  DBBookExporter.export(idBook, book);
-	  DBBookExporter.updateFlag(idBook, 3);
-	  book.generateAssociations(); 
-	  DBBookExporter.updateFlag(idBook, 4);
-	  // STEP 3: Do the export to the database (set flag 5)
-	  DBBookExporter.export(idBook, book);
-	  DBBookExporter.updateFlag(idBook, 5);
+	  dbExporter.exportCharacters(idBook, book);
+	  
+	  dbExporter.updateFlag(idBook, 4);
+	  book.generateAssociations();
+	  dbExporter.exportCharacterSentences(idBook, book);
+	  
+	  dbExporter.updateFlag(idBook, 4);
+
+	  dbExporter.updateFlag(idBook, 5);
   }
   
   private static String getTxtFromUrl(String urlString) {
