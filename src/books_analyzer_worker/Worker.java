@@ -13,11 +13,10 @@ import java.util.concurrent.TimeoutException;
 public class Worker {
   private static final String JOBS_QUEUE = "jobs_queue";
   private static final String LOGS_QUEUE = "logs";
-  private static final String ERROR_QUEUE = "errors";
   private static String workerId;
 
   public static void main(String[] argv) throws Exception {
-	if (argv.length>0) { workerId = argv[0]; }
+	if (argv.length>0) { workerId = argv[0]; } else { workerId="unidentified"; }
     ConnectionFactory factory = new ConnectionFactory();
 	factory.setHost("fox.rmq.cloudamqp.com");
 	factory.setUsername("xhffrluv");
@@ -39,7 +38,10 @@ public class Worker {
         try {
         	process(message);
         } catch (Exception e){
-        	sendToQueue("Worker " + workerId + ": failed to process the book " + message, ERROR_QUEUE);
+        	sendToQueue("Worker " + workerId + ": failed to process the book " + message, LOGS_QUEUE);
+        	DBBookExporter dbExporter = new DBBookExporter();
+        	dbExporter.updateFlag(message, 9);
+        	sendToQueue("Worker " + workerId + ": it has been flagged" + message, LOGS_QUEUE);
         } finally {
         	sendToQueue("Worker " + workerId + " [x] Done", LOGS_QUEUE);
             channel.basicAck(envelope.getDeliveryTag(), false);
