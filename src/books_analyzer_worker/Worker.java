@@ -16,7 +16,10 @@ public class Worker {
 
   public static void main(String[] argv) throws Exception {
     ConnectionFactory factory = new ConnectionFactory();
-    factory.setHost("localhost");
+	factory.setHost("fox.rmq.cloudamqp.com");
+	factory.setUsername("xhffrluv");
+	factory.setPassword("zIU2WWJtvjsDUv_BrwCoU60RWcekbpvP");
+	factory.setVirtualHost("xhffrluv");
     final Connection connection = factory.newConnection();
     final Channel channel = connection.createChannel();
 
