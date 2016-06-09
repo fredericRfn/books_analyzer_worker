@@ -18,10 +18,9 @@ public class Worker {
   public static void main(String[] argv) throws Exception {
 	if (argv.length>0) { workerId = argv[0]; } else { workerId="unidentified"; }
     ConnectionFactory factory = new ConnectionFactory();
-	factory.setHost("fox.rmq.cloudamqp.com");
-	factory.setUsername("xhffrluv");
-	factory.setPassword("zIU2WWJtvjsDUv_BrwCoU60RWcekbpvP");
-	factory.setVirtualHost("xhffrluv");
+	factory.setHost("54.191.210.230");
+	factory.setUsername("guest");
+	factory.setPassword("guest");
     final Connection connection = factory.newConnection();
     final Channel channel = connection.createChannel();
 
@@ -53,10 +52,9 @@ public class Worker {
   
   private static void sendToQueue(String message, String queue) {
 		ConnectionFactory factory = new ConnectionFactory();
-		factory.setHost("fox.rmq.cloudamqp.com");
-		factory.setUsername("xhffrluv");
-		factory.setPassword("zIU2WWJtvjsDUv_BrwCoU60RWcekbpvP");
-		factory.setVirtualHost("xhffrluv");
+		factory.setHost("54.191.210.230");
+		factory.setUsername("guest");
+		factory.setPassword("guest");
 		Connection connection;
 		try {
 			connection = factory.newConnection();
