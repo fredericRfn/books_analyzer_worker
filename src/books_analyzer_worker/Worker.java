@@ -18,7 +18,7 @@ public class Worker {
   public static void main(String[] argv) throws Exception {
 	if (argv.length>0) { workerId = argv[0]; } else { workerId="unidentified"; }
     ConnectionFactory factory = new ConnectionFactory();
-	factory.setHost("54.191.210.230");
+	factory.setHost("localhost");
 	factory.setUsername("guest");
 	factory.setPassword("guest");
     final Connection connection = factory.newConnection();
@@ -52,7 +52,7 @@ public class Worker {
   
   private static void sendToQueue(String message, String queue) {
 		ConnectionFactory factory = new ConnectionFactory();
-		factory.setHost("54.191.210.230");
+		factory.setHost("localhost");
 		factory.setUsername("guest");
 		factory.setPassword("guest");
 		Connection connection;
@@ -117,11 +117,12 @@ public class Worker {
 				}
 			}
 			in.close();
+			sendToQueue("Worker " + workerId + ": successfully reached the url " + urlString, LOGS_QUEUE);
+			return sb.toString();
 		} catch (Exception e) {
 			sendToQueue("Worker " + workerId + ": fail to get the book from the url " + urlString, LOGS_QUEUE);
-			throw new RuntimeException("A problem occured while calling URL:"+ urlString, e);
+			return "";
 		} 
-		sendToQueue("Worker " + workerId + ": successfully reached the url " + urlString, LOGS_QUEUE);
-		return sb.toString();
+
 	}
 }

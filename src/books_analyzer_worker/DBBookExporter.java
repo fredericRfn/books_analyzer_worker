@@ -80,7 +80,6 @@ public class DBBookExporter {
 		try {
 			executeSQLUpdate(sql);
 		} catch (SQLException e) {
-			System.out.println(sql);
 			e.printStackTrace();
 		}
 	}
@@ -89,13 +88,12 @@ public class DBBookExporter {
 		ArrayList<Character> characters = book.getCharacters(); 
 		for(Character c: characters) {
 			id = IdCreator.create(idBook + c.name);
-			valuesInSQL = valuesInSQL + "('" + String.join("','", id, c.getName()) + "')";
+			valuesInSQL = valuesInSQL + "(\"" + String.join("\",\"", id, c.getName()) + "\")";
 		};
 		sql = "INSERT INTO Characters(idCharacter, name) VALUES " + valuesInSQL.replace(")(", "),(") + ";";
  		try {
 			executeSQLUpdate(sql.replace("\"", "#").replace("\n", ""));
 		} catch (SQLException e) {
-			System.out.println(sql);
 			e.printStackTrace();
 		}
 	}
@@ -103,7 +101,6 @@ public class DBBookExporter {
 		String valuesInSQL =""; String sql;
 		ArrayList<CharacterSentence> characterSentences = book.getCharacterSentences(); 
 		for(CharacterSentence cs: characterSentences) {
-			System.out.println(cs.getSentence().getContent()); 
 			valuesInSQL = valuesInSQL + "("
 					+ String.join(",", 
 							IdCreator.create(idBook + cs.getCharacter().getName()),
